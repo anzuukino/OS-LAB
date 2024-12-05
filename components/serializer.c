@@ -119,8 +119,10 @@ int main(int argc, char *argv[])
 {
   char script[0x1000];
   fgets(script,0xfff, stdin);
+  script[strcspn(script, "\n")] = 0;
   int cmd_count = serializer(script);
   for(int i=0;i<cmd_count;i++)
     print_command(&cmd_list[i]);
+  execvp(cmd_list[0].args[0], cmd_list[0].args);
   return EXIT_SUCCESS;
 }
