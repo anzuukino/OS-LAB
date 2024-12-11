@@ -1,11 +1,13 @@
 // gcc serializer.c -o main
 #include <stdio.h>
 #include "command.h"
-#include "global.c"
+
 #include <string.h>
 #include <malloc.h>
 #include <unistd.h>
 #include <stdlib.h>
+
+command cmd_list[20];
 // Serialize multiple commands into command struct. e.g: 
 // "ls | grep -r" --> {"ls", "grep -r"}
 // "ls | grep -r "OOP" > oop.txt " --> {"ls", "grep -r "OOP" > oop.txt"}
@@ -115,6 +117,7 @@ void print_command(command *cmd){
 }
 #endif /* ifdef DEBUG */ 
 
+#ifdef SERIALIZE_TEST 
 int main(int argc, char *argv[])
 {
   char script[0x1000];
@@ -126,3 +129,4 @@ int main(int argc, char *argv[])
   execvp(cmd_list[0].args[0], cmd_list[0].args);
   return EXIT_SUCCESS;
 }
+#endif
