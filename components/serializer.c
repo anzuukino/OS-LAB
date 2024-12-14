@@ -16,20 +16,32 @@ command cmd_list[20];
 int serialize_command(char* input){
   if(input == NULL)
     return -1;
-  char *inp_dup = strdup(input);
+  char *delim_pos = NULL;
+  char *start = input;
   int cmd_count = 0;
-  char *token = NULL;
-  token = strtok(inp_dup, "|");
-  while(token != NULL){
-    cmd_list[cmd_count].raw_string = strdup(token);
-    cmd_list[cmd_count].pipe_to = true;
-    cmd_list[cmd_count++].pipe_from = true;
-    if(cmd_count > 20)
-      return -1;
-    token = strtok(NULL, "|");
+  while(*start){
+    delim_pos = strpbrk(start, "|;");
+    if(delim_pos){
+      int length = delim_pos - start;
+      cmd_list[cmd_count].raw_string = strndup(start, length);
+      if(*delim_pos == '|'){
+        cmd_list[cmd_count].pipe_from = true;
+        cmd_list[cmd_count].pipe_to = true;
+      }
+      start = delim_pos + 1;
+      cmd_count++;
+    }
+    else {
+      cmd_list[cmd_count].raw_string = strdup(start);
+      if(*(start-1) == '|'){
+        cmd_list[cmd_count].pipe_to = false;
+        cmd_list[cmd_count].pipe_from = true;
+      }
+      cmd_count++;
+      break;
+    }
   }
   cmd_list[0].pipe_from = false;
-  cmd_list[cmd_count-1].pipe_to = false;
   return cmd_count;
 }
 
@@ -114,9 +126,11 @@ void print_command(command *cmd){
   }
   printf("Redirect: %d\n", cmd->redirect);
   printf("Filename: %s\n", cmd->filename);
+  printf("Pipe from: %s\n", cmd->pipe_from ? "True" : "False");
+  printf("Pipe to: %s\n", cmd->pipe_to ? "True" : "False");
 }
 #endif /* ifdef DEBUG */ 
-
+//#define SERIALIZE_TEST
 #ifdef SERIALIZE_TEST 
 int main(int argc, char *argv[])
 {

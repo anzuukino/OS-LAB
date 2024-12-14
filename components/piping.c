@@ -76,6 +76,8 @@ void execute_pipe(int cmd_count){
   close(old_pipe[1]);
 }
 
+#ifdef PIPING_TEST_
+
 int main(int argc, char *argv[])
 {
   char script[0x1000];
@@ -90,4 +92,8 @@ int main(int argc, char *argv[])
   return EXIT_SUCCESS;
 }
 
+
+
+#endif /* ifdef PIPING_TEST_
+#define PIPING_TEST_ */
 
