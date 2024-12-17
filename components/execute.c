@@ -16,7 +16,7 @@ void execute(int cmd_count){
 
   for (int i = 0; i < cmd_count; i++) {
     command *cmd = &cmd_list[i];
-    signal(SIGCHLD, SIG_IGN); // prevent child process from zombie after terminated
+
     // Kiểm tra có sử dụng ký tự & không
     int background = 0;
     for (int j = 0; j < cmd->arg_count; j++) {
@@ -46,12 +46,8 @@ void execute(int cmd_count){
   }
 
 }
-<<<<<<< Updated upstream
 
 
-=======
-// #define EXECUTE_TEST_
->>>>>>> Stashed changes
 #ifdef EXECUTE_TEST_
 int main(int argc, char *argv[])
 {
