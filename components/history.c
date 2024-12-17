@@ -74,7 +74,7 @@ int history_serializer(char* history_command){
   int flag = 0;
   char *temp = (char*)malloc(BUFF_SIZE);
   while(*start){
-    // printf("Start: %c,%d\n", *start, index);
+    // printf("Start: %c,%d\n", *start, flag);
     if (*start == '!' && flag == 0){
       if (index != 0){
         char *tmp = strcpy(strndup(temp, index), temp);
@@ -100,6 +100,9 @@ int history_serializer(char* history_command){
         continue;
       }else if (*start == '-' || isdigit(*start)){
         char *start_index = start;
+        if (*start == '-'){
+          start++;
+        }
         while(isdigit(*start)){
           start++;
         }
