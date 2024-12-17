@@ -12,4 +12,8 @@ typedef struct{
   bool pipe_from;
 } command;
 
+typedef struct{
+  int stop_piping;
+} flag_;
+
 #endif // !COMMAND_H

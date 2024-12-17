@@ -6,9 +6,14 @@
 #include <stdlib.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/shm.h>
 extern command cmd_list[20];
 extern void print_command(command*);
 extern int serializer(char*);
+
+void *shared_mem;
+flag_ * flag;
 
 void redirect(const char * filename, int newfd){
   int fd;
@@ -28,52 +33,68 @@ void redirect(const char * filename, int newfd){
 }
 
 void execute_pipe(int cmd_count){
-  int old_pipe[2];
-  int new_pipe[2];
-  for(int i=0;i<cmd_count;i++){
+  int pid1 = fork();
+  if(pid1 == 0){
+    int old_pipe[2];
+    int new_pipe[2];
+    flag->stop_piping = 0;
+    for(int i=0;i<cmd_count;i++){
+      if(flag->stop_piping)
+        break;
+      if(i==0 && cmd_list[i].redirect == FILE_INP)
+        redirect(cmd_list[i].filename, STDIN_FILENO);
 
-    if(i==0 && cmd_list[i].redirect == FILE_INP)
-      redirect(cmd_list[i].filename, STDIN_FILENO);
+      if(i==cmd_count-1 && cmd_list[i].redirect == FILE_OUT)
+        redirect(cmd_list[i].filename, STDOUT_FILENO);
 
-    if(i==cmd_count-1 && cmd_list[i].redirect == FILE_OUT)
-      redirect(cmd_list[i].filename, STDOUT_FILENO);
+      if(cmd_list[i].pipe_to)
+        pipe(new_pipe);
 
-    if(cmd_list[i].pipe_to)
-      pipe(new_pipe);
+      pid_t pid = fork();
 
-    pid_t pid = fork();
+      if(pid < 0){
+        perror("fork() failed. Exiting...");
+        exit(-1);
+      }
 
-    if(pid < 0){
-      perror("fork() failed. Exiting...");
-      exit(-1);
+      if(pid == 0){
+        if(cmd_list[i].pipe_from){
+          dup2(old_pipe[0], STDIN_FILENO);
+          close(old_pipe[0]);
+          close(old_pipe[1]);
+        }
+        if(cmd_list[i].pipe_to){
+          close(new_pipe[0]);
+          dup2(new_pipe[1], STDOUT_FILENO);
+          close(new_pipe[1]);
+        }
+        execvp(cmd_list[i].args[0], cmd_list[i].args);
+        perror("execvp error");
+        flag->stop_piping = 1;
+        exit(-1);
+      }
+      else{
+        if(cmd_list[i].pipe_from){
+          close(old_pipe[0]);
+          close(old_pipe[1]);
+        }
+        if(cmd_list[i].pipe_to){
+          old_pipe[0] = new_pipe[0];
+          old_pipe[1] = new_pipe[1];
+        }
+      }
     }
-
-    if(pid == 0){
-      if(cmd_list[i].pipe_from){
-        dup2(old_pipe[0], STDIN_FILENO);
-        close(old_pipe[0]);
-        close(old_pipe[1]);
-      }
-      if(cmd_list[i].pipe_to){
-        close(new_pipe[0]);
-        dup2(new_pipe[1], STDOUT_FILENO);
-        close(new_pipe[1]);
-      }
-      execvp(cmd_list[i].args[0], cmd_list[i].args);
-    }
-    else{
-      if(cmd_list[i].pipe_from){
-        close(old_pipe[0]);
-        close(old_pipe[1]);
-      }
-      if(cmd_list[i].pipe_to){
-        old_pipe[0] = new_pipe[0];
-        old_pipe[1] = new_pipe[1];
-      }
-    }
+    close(old_pipe[0]);
+    close(old_pipe[1]);
+    close(new_pipe[0]);
+    close(new_pipe[1]);
+    usleep(10000);
+    exit(0);
   }
-  close(old_pipe[0]);
-  close(old_pipe[1]);
+  if(pid1 > 0){
+    wait(NULL);
+    return;
+  }
 }
 
 #ifdef PIPING_TEST_
@@ -91,7 +112,6 @@ int main(int argc, char *argv[])
   execute_pipe(cmd_count);
   return EXIT_SUCCESS;
 }
-
 
 
 #endif /* ifdef PIPING_TEST_

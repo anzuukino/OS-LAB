@@ -6,8 +6,18 @@
 #include <malloc.h>
 #include <unistd.h>
 #include <stdlib.h>
-
+#include <ctype.h>
 command cmd_list[20];
+
+void trim(char * s) {
+  char * p = s;
+  int l = strlen(p);
+
+  while(isspace(p[l - 1])) p[--l] = 0;
+  while(* p && isspace(* p)) ++p, --l;
+
+  memmove(s, p, l + 1);
+} 
 // Serialize multiple commands into command struct. e.g: 
 // "ls | grep -r" --> {"ls", "grep -r"}
 // "ls | grep -r "OOP" > oop.txt " --> {"ls", "grep -r "OOP" > oop.txt"}
@@ -42,6 +52,8 @@ int serialize_command(char* input){
     }
   }
   cmd_list[0].pipe_from = false;
+  for(int i=0;i<cmd_count;i++)
+    trim(cmd_list[i].raw_string);
   return cmd_count;
 }
 
@@ -84,20 +96,24 @@ int serialize_args(command *cmd){
   return 0;
 }
 
-static inline void safe_free(void*ptr){
-  if(ptr){
-    free(ptr);
-    ptr = NULL;
+void safe_free(void**ptr){
+  if(*ptr){
+    free(*ptr);
+    *ptr = NULL;
   }
 }
 
 void clean_cmd(){
   for(int i=0;i<20;i++){
-    safe_free(cmd_list[i].raw_string);
-    safe_free(cmd_list[i].filename);
+    safe_free((void**) &cmd_list[i].raw_string);
+    safe_free((void**) &cmd_list[i].filename);
     for(int j =0;j<20;j++)
-      safe_free(cmd_list[i].args[j]);
+      safe_free((void**) &cmd_list[i].args[j]);
     cmd_list[i].arg_count = 0;
+    cmd_list[i].pipe_to = false;
+    cmd_list[i].pipe_from = false;
+    cmd_list[i].redirect = NONE;
+    cmd_list[i].filename = NULL;
   }
 }
 
