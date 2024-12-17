@@ -36,7 +36,7 @@ void* create_shm(){
   int shared_fd = shm_open("OS", O_RDWR | O_CREAT, 0666);
   ftruncate(shared_fd, 0x1000);
   void * ret = mmap(0, 0x1000, PROT_READ |PROT_WRITE, MAP_SHARED, shared_fd, 0);
-  if(ret == -1){
+  if(ret == (void*)-1){
     perror("mmap error");
     exit(-1);
   }

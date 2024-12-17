@@ -66,19 +66,36 @@ int serialize_args(command *cmd){
   char* token = NULL;
   char *cmd_only = NULL;
   char *file = NULL;
-  if(strchr(cmd->raw_string, '>'))
-    cmd->redirect = FILE_OUT;
+  char *first = NULL;
+  char *second = NULL;
+
+  if(strchr(cmd->raw_string, '>') && strchr(cmd->raw_string, '>'))
+    cmd->redirect = FILE_IO;
   else if(strchr(cmd->raw_string, '<' ))
     cmd->redirect = FILE_INP;
+  else if(strchr(cmd->raw_string, '>'))
+    cmd->redirect = FILE_OUT;
   else 
     cmd->redirect = NONE;
+
   if(cmd->redirect != NONE){
-    token = strtok(cmd->raw_string, "><");
-    cmd_only = strdup(token);
-    token = strtok(NULL, " \n");
-    file = strdup(token);
-    cmd->filename = file;
+    first = strpbrk(cmd->raw_string, "><");
+
+    second = strpbrk(first+1, "><");
+    if(*second == '>')
+      cmd->file_out = strdup(second+1);
+    else if(*second == '<')
+      cmd->file_in = strdup(second+1);
+
+    *second = 0;
+    if(*first == '>')
+      cmd->file_out = strdup(first+1);
+    else
+      cmd->file_in = strdup(first+1);
+    *first = 0;
+
   }
+
   // Split args.
   cmd_only = strdup(cmd->raw_string);
   int argc = 0;
@@ -106,14 +123,14 @@ void safe_free(void**ptr){
 void clean_cmd(){
   for(int i=0;i<20;i++){
     safe_free((void**) &cmd_list[i].raw_string);
-    safe_free((void**) &cmd_list[i].filename);
+    safe_free((void**) &cmd_list[i].file_in);
+    safe_free((void**) &cmd_list[i].file_out);
     for(int j =0;j<20;j++)
       safe_free((void**) &cmd_list[i].args[j]);
     cmd_list[i].arg_count = 0;
     cmd_list[i].pipe_to = false;
     cmd_list[i].pipe_from = false;
     cmd_list[i].redirect = NONE;
-    cmd_list[i].filename = NULL;
   }
 }
 
@@ -141,7 +158,8 @@ void print_command(command *cmd){
     printf("argv[%d]: %s\n", i, cmd->args[i]);
   }
   printf("Redirect: %d\n", cmd->redirect);
-  printf("Filename: %s\n", cmd->filename);
+  printf("File in: %s\n", cmd->file_in);
+  printf("File_out: %s\n", cmd->file_out);
   printf("Pipe from: %s\n", cmd->pipe_from ? "True" : "False");
   printf("Pipe to: %s\n", cmd->pipe_to ? "True" : "False");
 }

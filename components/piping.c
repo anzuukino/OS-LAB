@@ -42,10 +42,10 @@ void execute_pipe(int cmd_count){
       if(flag->stop_piping)
         break;
       if(i==0 && cmd_list[i].redirect == FILE_INP)
-        redirect(cmd_list[i].filename, STDIN_FILENO);
+        redirect(cmd_list[i].file_in, STDIN_FILENO);
 
       if(i==cmd_count-1 && cmd_list[i].redirect == FILE_OUT)
-        redirect(cmd_list[i].filename, STDOUT_FILENO);
+        redirect(cmd_list[i].file_out, STDOUT_FILENO);
 
       if(cmd_list[i].pipe_to)
         pipe(new_pipe);

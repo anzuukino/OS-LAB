@@ -6,8 +6,9 @@ typedef struct{
   char *raw_string;
   char *args[20];
   int arg_count;
-  enum {NONE, FILE_INP, FILE_OUT} redirect ;
-  char *filename;
+  enum {NONE, FILE_INP, FILE_OUT, FILE_IO} redirect ;
+  char *file_out;
+  char *file_in;
   bool pipe_to;
   bool pipe_from;
 } command;
