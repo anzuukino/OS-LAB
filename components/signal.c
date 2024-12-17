@@ -4,7 +4,7 @@
 
 
 void sigint_handler(){
-  puts("Exiting...");
+  puts("\nExiting...");
   exit(0);
 }
 
