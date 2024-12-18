@@ -62,11 +62,15 @@ void execute(command* cmd){
     }
 
     // Gọi execvp để thực thi lệnh
+    if (strcmp(cmd->args[0],"cd") == 0){
+        chdir(cmd->args[1]);
+        return;
+    }
     pid_t pid = fork();
     int original_stdin = dup(STDIN_FILENO);
     int original_stdout = dup(STDOUT_FILENO);
+    
     if (pid == 0) { // Process con
-
     // Merging the redirecting file function of the shell here
       execute_redirect(cmd); 
       execvp(cmd->args[0], cmd->args);

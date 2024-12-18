@@ -62,7 +62,6 @@ void execute_commands(int cmd_count){
 int main(int argc, char *argv[]){
   char *input_cmd = malloc(0x1000);
   char cwd[PATH_MAX];
-  getcwd(cwd, sizeof(cwd) );
   shared_mem = create_shm();
   flag = shared_mem;
   int cmd_count = 0;
@@ -70,6 +69,7 @@ int main(int argc, char *argv[]){
   signal(SIGINT, sigint_handler);
 
   while(1){
+    getcwd(cwd, sizeof(cwd) );
     clean_cmd();
     memset(input_cmd,0,0x1000);
     printf(KRED "osh: %s$ " KNRM,cwd);

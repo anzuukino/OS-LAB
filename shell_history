@@ -271,3 +271,61 @@ ls
 !!
 !!
 !!
+ls
+cd ..
+ls
+ls -lah
+!!
+!!;!2
+ls
+!!;!2
+!!!;l2
+!!!
+ls
+!!!
+!!!!
+ls
+! !
+! !!
+ls
+ls
+! !!
+echo !!
+ls
+cd ..
+cd ..
+ls
+ls
+grep -r "!!" .
+
+grep -r "ls" . > dox.txt
+ls
+cat dox.txt
+ls
+ls -lah | grep "main.c" > test.txt
+ls
+	[A
+ls -lah | grep "main.c"
+ls
+ls -lah | grep main.c
+ls -lah | grep main.c > test.xt
+ls
+ls > sort > dox.txt
+ls
+ls
+rm dox.txt
+ls
+ls > sort > dox.txt
+ls
+ls > sort
+ls | sort
+ls | sort | sort | sort > test.txt
+ls
+ls > test.txt
+ls
+cat test.xt
+cat test.txt
+rm test.txt
+whoami
+sudo
+./bash
