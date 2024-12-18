@@ -9,6 +9,39 @@
 #include <ctype.h>
 command cmd_list[20];
 
+#define DEBUG
+#ifdef DEBUG
+void print_command(command *cmd){
+  printf("Raw string: %s\n", cmd->raw_string);
+  printf("Argc: %d\n", cmd->arg_count);
+  for(int i=0;i<cmd->arg_count;i++){
+    printf("argv[%d]: %s\n", i, cmd->args[i]);
+  }
+  printf("Redirect: %d\n", cmd->redirect);
+  printf("File in: %s\n", cmd->file_in);
+  printf("File_out: %s\n", cmd->file_out);
+  printf("Pipe from: %s\n", cmd->pipe_from ? "True" : "False");
+  printf("Pipe to: %s\n", cmd->pipe_to ? "True" : "False");
+}
+#endif /* ifdef DEBUG */ 
+//#define SERIALIZE_TEST
+
+// Remove all spaces in a string
+// Example: "ls > in.txt > out.txt" -> "ls>in.txt>out.txt"
+void remove_space(char *s) { 
+  char* read = s;
+  char* write = s;
+  while (*read){
+    if (!isspace(*read)){
+      *write = *read;
+      write++;
+    }
+    read++;
+  }
+  *write = 0;
+  memmove(s, write, strlen(write)+1);
+}
+
 void trim(char * s) {
   char * p = s;
   int l = strlen(p);
@@ -65,11 +98,11 @@ int serialize_args(command *cmd){
   // Seperate redirect file from command
   char* token = NULL;
   char *cmd_only = NULL;
-  char *file = NULL;
-  char *first = NULL;
-  char *second = NULL;
+  //char *file = NULL;
+  //char *first = NULL;
+  //char *second = NULL;
 
-  if(strchr(cmd->raw_string, '>') && strchr(cmd->raw_string, '>'))
+  if(strchr(cmd->raw_string, '<') && strchr(cmd->raw_string, '>'))
     cmd->redirect = FILE_IO;
   else if(strchr(cmd->raw_string, '<' ))
     cmd->redirect = FILE_INP;
@@ -78,24 +111,65 @@ int serialize_args(command *cmd){
   else 
     cmd->redirect = NONE;
 
+  // Serialize a raw command into (command with args, file_in, file_out)
   if(cmd->redirect != NONE){
-    first = strpbrk(cmd->raw_string, "><");
+    //first = strpbrk(cmd->raw_string, "><");
+    //second = strpbrk(first+1, "><");
+    //if (second){
+    //  if(*second == '>')
+    //    cmd->file_out = strdup(second+1);
+    //  else if(*second == '<')
+    //    cmd->file_in = strdup(second+1);
+    //  *second = 0;
+    //}
+    //if(*first == '>')
+    //  cmd->file_out = strdup(first+1);
+    //else
+    //  cmd->file_in = strdup(first+1);
+    //*first = 0;
+  char *p_in = NULL;
+  char *p_out = NULL;
+  
+  // Separate each file in, the final file in will be the last one (from left to right)
+  char* index_in = strpbrk(cmd->raw_string, "<");
+  if (index_in)
+    p_in = strdup(index_in);
 
-    second = strpbrk(first+1, "><");
-    if(*second == '>')
-      cmd->file_out = strdup(second+1);
-    else if(*second == '<')
-      cmd->file_in = strdup(second+1);
-
-    *second = 0;
-    if(*first == '>')
-      cmd->file_out = strdup(first+1);
-    else
-      cmd->file_in = strdup(first+1);
-    *first = 0;
-
+  while (p_in){
+    remove_space(p_in);
+    char* pos = strpbrk(p_in+1, "><");
+    if (pos){
+      size_t length = pos - (p_in+1);
+      cmd->file_in = strndup(p_in+1, length);}
+    else{
+      cmd->file_in = strndup(p_in+1, strlen(p_in+1));
+    }
+    p_in = strpbrk(p_in+1, "<");
   }
 
+  // Separate each file out, the final file out will be the last one (from left to right)
+  char * index_out = strpbrk(cmd->raw_string, ">");
+  if (index_out)
+    p_out = strdup(index_out);
+
+  while (p_out){
+    remove_space(p_out);
+    char* pos = strpbrk(p_out+1, "><");
+    if (pos){
+      size_t length = pos - (p_out+1);
+      cmd->file_out = strndup(p_out+1, length);
+    }
+    else{
+      cmd->file_out = strndup(p_out+1, strlen(p_out+1));
+    }
+    p_out = strpbrk(p_out+1, ">");
+  }
+
+  // Remove the file in and file out from the raw string
+  // The raw string will be the command only with arguments
+    char* tmp = strpbrk(cmd->raw_string, "<>");
+    *tmp = 0;
+  }
   // Split args.
   cmd_only = strdup(cmd->raw_string);
   int argc = 0;
@@ -149,23 +223,8 @@ int serializer(char *userinput){
   }
   return cmd_count;
 }
-#define DEBUG
-#ifdef DEBUG
-void print_command(command *cmd){
-  printf("Raw string: %s\n", cmd->raw_string);
-  printf("Argc: %d\n", cmd->arg_count);
-  for(int i=0;i<cmd->arg_count;i++){
-    printf("argv[%d]: %s\n", i, cmd->args[i]);
-  }
-  printf("Redirect: %d\n", cmd->redirect);
-  printf("File in: %s\n", cmd->file_in);
-  printf("File_out: %s\n", cmd->file_out);
-  printf("Pipe from: %s\n", cmd->pipe_from ? "True" : "False");
-  printf("Pipe to: %s\n", cmd->pipe_to ? "True" : "False");
-}
-#endif /* ifdef DEBUG */ 
-//#define SERIALIZE_TEST
-#ifdef SERIALIZE_TEST 
+
+#ifdef SERIALIZE_TEST_
 int main(int argc, char *argv[])
 {
   char script[0x1000];

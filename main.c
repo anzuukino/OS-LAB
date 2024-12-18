@@ -24,14 +24,17 @@
 extern command cmd_list[20];
 extern void print_command(command*);
 extern int serializer(char*);
-extern void execute(int );
+extern void execute_commands(int );
 extern void execute_pipe(int);
+extern void execute(command*);
 extern void *shared_mem; //remember to initialize this 
 extern flag_ * flag;
 extern void clean_cmd();
 extern void sigint_handler();
 extern void sigquit_handler();
 extern void print_command(command*);
+extern void execute_redirect(command*);
+
 void* create_shm(){
   int shared_fd = shm_open("OS", O_RDWR | O_CREAT, 0666);
   ftruncate(shared_fd, 0x1000);
@@ -41,6 +44,17 @@ void* create_shm(){
     exit(-1);
   }
   return ret;
+}
+
+void execute_commands(int cmd_count){
+  if (cmd_list[0].pipe_to == true){
+    execute_pipe(cmd_count);
+  }
+  else {
+    for(int i=0;i<cmd_count;i++){
+      execute(&cmd_list[i]);
+    }
+  }
 }
 
 int main(int argc, char *argv[]){
@@ -59,13 +73,10 @@ int main(int argc, char *argv[]){
     printf(KRED "osh: %s$ " KNRM,cwd);
     fgets(input_cmd,0xfff, stdin);
     input_cmd[strcspn(input_cmd, "\n")] = 0;
+
+    // Serialize the input command and execute it
     cmd_count = serializer(input_cmd);
-    if(cmd_list[0].pipe_to == true){
-      execute_pipe(cmd_count);
-    }
-    else{
-      execute(cmd_count);
-    }
+    execute_commands(cmd_count);
     usleep(100000);
   }
   return EXIT_SUCCESS;
