@@ -34,6 +34,8 @@ extern void sigint_handler();
 extern void sigquit_handler();
 extern void print_command(command*);
 extern void execute_redirect(command*);
+extern void history_add(char*);
+extern void history_command(command*);
 
 void* create_shm(){
   int shared_fd = shm_open("OS", O_RDWR | O_CREAT, 0666);
@@ -76,7 +78,10 @@ int main(int argc, char *argv[]){
 
     // Serialize the input command and execute it
     cmd_count = serializer(input_cmd);
+    for(int i=0;i<cmd_count;i++)
+      history_command(&cmd_list[i]);
     execute_commands(cmd_count);
+    history_add(input_cmd);
     usleep(100000);
   }
   return EXIT_SUCCESS;

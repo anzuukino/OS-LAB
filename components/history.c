@@ -20,6 +20,7 @@ extern command cmd_list[20];
 extern void print_command(command*);
 extern int serializer(char*);
 extern void execute(int);
+extern int serialize_args(command*);
 
 void trim_newline(char * s) {
   char * p = s;
@@ -44,7 +45,7 @@ void read_history(){
   int index = 0;
   while ((read = getline(&line, &len, file)) != -1) {
     history_list[index] = strdup(line);
-    trim_newline(history_list[index]);
+    history_list[index][strcspn(history_list[index], "\n")] = 0;
     index++;
   }
   CURRENT_HISTORY = index;
@@ -73,6 +74,7 @@ int history_serializer(char* history_command){
   int history_count = 0, index = 0;
   int flag = 0;
   char *temp = (char*)malloc(BUFF_SIZE);
+  memset(temp,0,BUFF_SIZE);
   while(*start){
     // printf("Start: %c,%d\n", *start, flag);
     if (*start == '!' && flag == 0){
@@ -173,20 +175,24 @@ char *convert_history(char* history_command){
 
 void history_command(command* history_cmd){
   char* cmd = history_cmd->raw_string;
+  char *new = malloc(0x1000);
+  memset(new,0 ,0x1000);
   // puts("Analyzing history command");
   int history_count = history_serializer(cmd);
-  printf("History count: %d\n", history_count);
+  //printf("History count: %d\n", history_count);
   // for (int i = 0; i < history_count; i++){
   //   printf("History command %d: %s\n", i, history_command_list[i]);
   // }
   read_history();
   for (int i = 0; i < history_count; i++){
-    char *history_cmd = convert_history(history_command_list[i]);
-    printf("History command %d: %s\n", i, history_cmd);
+    char *history_cmd_str = convert_history(history_command_list[i]);
+    //printf("History command %d: %s\n", i, history_cmd_str);
+    strcat(new, history_cmd_str);
   }
-  
+  history_cmd->raw_string = new;
+  serialize_args(history_cmd);
 }
-#define HISTORY_TEST_
+//#define HISTORY_TEST_
 #ifdef HISTORY_TEST_
 int main(int argc, char *argv[])
 {
