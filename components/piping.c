@@ -41,12 +41,6 @@ void execute_pipe(int cmd_count){
     for(int i=0;i<cmd_count;i++){
       if(flag->stop_piping)
         break;
-      if(i==0 && cmd_list[i].redirect == FILE_INP)
-        redirect(cmd_list[i].file_in, STDIN_FILENO);
-
-      if(i==cmd_count-1 && cmd_list[i].redirect == FILE_OUT)
-        redirect(cmd_list[i].file_out, STDOUT_FILENO);
-
       if(cmd_list[i].pipe_to)
         pipe(new_pipe);
 
@@ -63,6 +57,13 @@ void execute_pipe(int cmd_count){
           close(old_pipe[0]);
           close(old_pipe[1]);
         }
+        if(i==0 && cmd_list[i].file_in)
+          redirect(cmd_list[i].file_in, STDIN_FILENO);
+
+        if(i==cmd_count-1 && cmd_list[i].file_out)
+          redirect(cmd_list[i].file_out, STDOUT_FILENO);
+
+
         if(cmd_list[i].pipe_to){
           close(new_pipe[0]);
           dup2(new_pipe[1], STDOUT_FILENO);
