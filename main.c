@@ -36,6 +36,7 @@ extern void print_command(command*);
 extern void execute_redirect(command*);
 extern void history_add(char*);
 extern void history_command(command*);
+extern void init_history();
 
 void* create_shm(){
   int shared_fd = shm_open("OS", O_RDWR | O_CREAT, 0666);
@@ -65,7 +66,7 @@ int main(int argc, char *argv[]){
   shared_mem = create_shm();
   flag = shared_mem;
   int cmd_count = 0;
-  
+  init_history();
   signal(SIGINT, sigint_handler);
 
   while(1){

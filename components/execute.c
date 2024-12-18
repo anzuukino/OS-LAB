@@ -66,6 +66,10 @@ void execute(command* cmd){
         chdir(cmd->args[1]);
         return;
     }
+    if (cmd->history_error){
+      printf("%s\n",cmd->raw_string);
+      return;
+    }
     pid_t pid = fork();
     int original_stdin = dup(STDIN_FILENO);
     int original_stdout = dup(STDOUT_FILENO);

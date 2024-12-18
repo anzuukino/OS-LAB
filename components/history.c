@@ -7,14 +7,15 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <ctype.h>
-#define HISTORY_FILE "shell_history"
+#define HISTORY_FILE "/tmp/.shell_history"
 #define BUFF_SIZE 0x1000
 #define HISTORY_SIZE 0x1000
 
+bool history_error = false;
 char *history_command_list[100];
 char *history_list[HISTORY_SIZE];
 int CURRENT_HISTORY = 0;
-char *NOTFOUND = "Not found";
+char *NOTFOUND = ": event not found";
 
 extern command cmd_list[20];
 extern void print_command(command*);
@@ -31,7 +32,16 @@ void trim_newline(char * s) {
   }
 
   memmove(s, p, l + 1);
-} 
+}
+
+void init_history(){
+  FILE* file = fopen(HISTORY_FILE, "a");
+  if (file == NULL) {
+    perror("Error opening history file");
+    exit(EXIT_FAILURE);
+  }
+  fclose(file);
+}
 
 void read_history(){
   FILE* file = fopen(HISTORY_FILE, "r");
@@ -154,14 +164,16 @@ char *convert_history(char* history_command){
       start++;
       int index = atoi(start);
       if (CURRENT_HISTORY + index < 0){
-        return NOTFOUND;
+        history_error = true;
+        return strcat(start - 1, NOTFOUND);
       }
       return strdup(history_list[CURRENT_HISTORY + index]);
     }else if (isdigit(*(start + 1))){
       start++;
       int index = atoi(start);
       if (index >= CURRENT_HISTORY){
-        return NOTFOUND;
+        history_error = true;
+        return strcat(start - 1, NOTFOUND);
       }
       return strdup(history_list[index]);
     }else{
@@ -184,11 +196,18 @@ void history_command(command* history_cmd){
   //   printf("History command %d: %s\n", i, history_command_list[i]);
   // }
   read_history();
+  history_error = false;
   for (int i = 0; i < history_count; i++){
     char *history_cmd_str = convert_history(history_command_list[i]);
     //printf("History command %d: %s\n", i, history_cmd_str);
+    if (history_error){
+      history_cmd->history_error = true;
+      strcpy(new, history_cmd_str);
+      break;
+    }
     strcat(new, history_cmd_str);
   }
+
   history_cmd->raw_string = new;
   serialize_args(history_cmd);
 }

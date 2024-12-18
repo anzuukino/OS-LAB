@@ -11,6 +11,7 @@ typedef struct{
   char *file_in;
   bool pipe_to;
   bool pipe_from;
+  bool history_error;
 } command;
 
 typedef struct{
