@@ -1,0 +1,8 @@
+ls
+cat osh | base64 > ../test.txt
+cat ../test.txt
+!!
+ls -la
+!!
+!!
+!!
