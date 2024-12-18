@@ -66,6 +66,7 @@ void execute(command* cmd){
         chdir(cmd->args[1]);
         return;
     }
+    // printf("cmd->history_error: %d\n",cmd->history_error);
     if (cmd->history_error){
       printf("%s\n",cmd->raw_string);
       return;

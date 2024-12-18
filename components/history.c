@@ -14,7 +14,7 @@
 bool history_error = false;
 char *history_command_list[100];
 char *history_list[HISTORY_SIZE];
-int CURRENT_HISTORY = 0;
+unsigned int CURRENT_HISTORY = 0;
 char *NOTFOUND = ": event not found";
 
 extern command cmd_list[20];
@@ -52,7 +52,7 @@ void read_history(){
   char *line = NULL;
   size_t len = 0;
   ssize_t read;
-  int index = 0;
+  unsigned int index = 0;
   while ((read = getline(&line, &len, file)) != -1) {
     history_list[index] = strdup(line);
     history_list[index][strcspn(history_list[index], "\n")] = 0;

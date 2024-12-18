@@ -205,6 +205,7 @@ void clean_cmd(){
     cmd_list[i].pipe_to = false;
     cmd_list[i].pipe_from = false;
     cmd_list[i].redirect = NONE;
+    cmd_list[i].history_error = false;
   }
 }
 
