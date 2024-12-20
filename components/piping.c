@@ -19,8 +19,11 @@ void redirect(const char * filename, int newfd){
   int fd;
   if(newfd == STDIN_FILENO)
     fd = open(filename, O_RDONLY);
-  if(newfd == STDOUT_FILENO)
+  if(newfd == STDOUT_FILENO){
+    if (access(filename, F_OK) == 0) 
+      remove(filename);
     fd = open(filename, O_WRONLY |  O_CREAT, 0755);
+  }
   if(fd == -1){
     perror("open() failed. Exiting...");
     exit(-1);

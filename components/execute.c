@@ -62,6 +62,8 @@ void execute(command* cmd){
     }
 
     // Gọi execvp để thực thi lệnh
+    if(cmd->args[0] == NULL)
+      return ;
     if (strcmp(cmd->args[0],"cd") == 0){
         chdir(cmd->args[1]);
         return;
